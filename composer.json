@@ -1,0 +1,33 @@
+{
+    "name": "shihjay2/openid-connect-uma-php",
+    "description": "Bare-bones OpenID Connect and UMA client",
+    "homepage": "https://github.com/shihjay2/openid-connect-uma-php",
+    "keywords": ["openid", "uma", "php"],
+    "type": "library",
+    "authors": [
+        {
+			"name" : "Michael Chen",
+			"role" : "Developer",
+			"homepage" : "https://github.com/shihjay2/"
+		},
+        {
+            "name": "Michael Jett",
+            "homepage" : "https://github.com/jumbojett/"
+        }
+    ],
+    "license": "Apache-2.0",
+    "require": {
+        "php": ">=5.4",
+        "phpseclib/phpseclib" : "2.0.1",
+        "ext-json": "*",
+        "ext-curl": "*"
+    },
+    "archive" : {
+        "exclude" : [
+            ".*"
+        ]
+    },
+    "autoload" : {
+         "classmap": [ "src/"]
+    }
+}
