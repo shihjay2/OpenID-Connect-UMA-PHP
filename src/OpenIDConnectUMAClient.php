@@ -316,7 +316,7 @@ class OpenIDConnectUMAClient
 	 */
 	public function authenticate() {
 		$uma = $this->getUMA();
-		// $type = $this->getUMAType();
+		$type = $this->getUMAType();
 		// Do a preemptive check to see if the provider has thrown an error from a previous redirect
 		if (isset($_REQUEST['error'])) {
 			$desc = isset($_REQUEST['error_description']) ? " Description: " . $_REQUEST['error_description'] : "";
@@ -463,7 +463,7 @@ class OpenIDConnectUMAClient
 			if ($uma == false) {
 				$this->requestAuthorization();
 			} else {
-				$this->requestUmaAuthorization();
+				$this->requestUmaAuthorization($type);
 			}
 			return false;
 		}
