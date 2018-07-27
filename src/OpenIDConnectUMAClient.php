@@ -736,7 +736,11 @@ class OpenIDConnectUMAClient
 		$nonce = $this->setNonce($this->generateRandString());
 
 		// State essentially acts as a session key for OIDC
-		$state = $this->setState($this->generateRandString());
+		if ($this->getState() == null) {
+			$state = $this->setState($this->generateRandString());
+		} else {
+			$state = $this->getState();
+		}
 		$auth_params = array_merge($this->authParams, array(
 			'response_type' => $response_type,
 			'redirect_uri' => $this->getRedirectURL(),
@@ -1759,7 +1763,11 @@ class OpenIDConnectUMAClient
 		$nonce = $this->setNonce($this->generateRandString());
 
 		// State essentially acts as a session key for OIDC
-		$state = $this->setState($this->generateRandString());
+		if ($this->getState() == null) {
+			$state = $this->setState($this->generateRandString());
+		} else {
+			$state = $this->getState();
+		}
 
 		$auth_params = array_merge($this->authParams, array(
 			'response_type' => $response_type,
