@@ -1573,7 +1573,7 @@ class OpenIDConnectUMAClient
 	 * @param string $state
 	 * @return string
 	 */
-	protected function setState($state) {
+	public function setState($state) {
 		if (property_exists($this, 'session_pretext') && $this->session_pretext) {
 			$_SESSION[$this->session_pretext]['openid_connect_state'] = $state;
 		} else {
@@ -1587,7 +1587,7 @@ class OpenIDConnectUMAClient
 	 *
 	 * @return string
 	 */
-	protected function getState() {
+	public function getState() {
 		if (property_exists($this, 'session_pretext') && $this->session_pretext) {
 			return $_SESSION[$this->session_pretext]['openid_connect_state'];
 		} else {
