@@ -2107,9 +2107,17 @@ class OpenIDConnectUMAClient
         $this->startSession();
 
         if ($pretext !== null) {
-            return $_SESSION[$pretext][$key];
+			if (isset($_SESSION[$pretext][$key])) {
+            	return $_SESSION[$pretext][$key];
+			} else {
+				return null;
+			}
         } else {
-            return $_SESSION[$key];
+			if (isset($_SESSION[$key])) {
+            	return $_SESSION[$key];
+			} else {
+				return null;
+			}
         }
     }
 
