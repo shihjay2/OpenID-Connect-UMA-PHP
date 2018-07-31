@@ -30,13 +30,6 @@ use phpseclib\Crypt\RSA;
  */
 
 /**
- * Use session to manage a nonce
- */
-if (!isset($_SESSION)) {
-	session_start();
-}
-
-/**
  *
  * JWT signature verification support by Jonathan Reed <jdreed@mit.edu>
  * Licensed under the same license as the rest of this file.
@@ -763,7 +756,7 @@ class OpenIDConnectUMAClient
 
 		$auth_endpoint .= (strpos($auth_endpoint, '?') === false ? '?' : '&') . http_build_query($auth_params, null, '&');
 
-		session_commit();
+		$this->commitSession();
 		$this->redirect($auth_endpoint);
 	}
 
@@ -1539,7 +1532,7 @@ class OpenIDConnectUMAClient
 	 * @return string
 	 */
 	protected function setNonce($nonce) {
-		$_SESSION['openid_connect_nonce'] = $nonce;
+		$this->setSessionKey('openid_connect_nonce', $nonce);
 		return $nonce;
 	}
 
@@ -1549,7 +1542,7 @@ class OpenIDConnectUMAClient
 	 * @return string
 	 */
 	protected function getNonce() {
-		return $_SESSION['openid_connect_nonce'];
+		return $this->getSessionKey('openid_connect_nonce');
 	}
 
 	/**
@@ -1558,7 +1551,7 @@ class OpenIDConnectUMAClient
 	 * @return void
 	 */
 	protected function unsetNonce() {
-		unset($_SESSION['openid_connect_nonce']);
+		$this->unsetSessionKey('openid_connect_nonce');
 	}
 
 	/**
@@ -1579,9 +1572,9 @@ class OpenIDConnectUMAClient
 	 */
 	public function setState($state) {
 		if (property_exists($this, 'session_pretext') && $this->session_pretext) {
-			$_SESSION[$this->session_pretext]['openid_connect_state'] = $state;
+			$this->setSessionKey('openid_connect_state', $state, $this->session_pretext);
 		} else {
-			$_SESSION['openid_connect_state'] = $state;
+			$this->setSessionKey('openid_connect_state', $state);
 		}
 		return $state;
 	}
@@ -1593,9 +1586,9 @@ class OpenIDConnectUMAClient
 	 */
 	public function getState() {
 		if (property_exists($this, 'session_pretext') && $this->session_pretext) {
-			return $_SESSION[$this->session_pretext]['openid_connect_state'];
+			return $this->getSessionKey('openid_connect_state', $this->session_pretext);
 		} else {
-			return $_SESSION['openid_connect_state'];
+			return $this->getSessionKey('openid_connect_state');
 		}
 	}
 
@@ -1606,9 +1599,9 @@ class OpenIDConnectUMAClient
 	 */
 	protected function unsetState() {
 		if (property_exists($this, 'session_pretext') && $this->session_pretext) {
-			unset($_SESSION[$this->session_pretext]['openid_connect_state']);
+			$this->unsetSessionKey('openid_connect_state', $this->session_pretext);
 		} else {
-			unset($_SESSION['openid_connect_state']);
+			$this->unsetSessionKey('openid_connect_state');
 		}
 	}
 
@@ -2020,7 +2013,7 @@ class OpenIDConnectUMAClient
 	public function rqp_claims($permission_ticket) {
 		$requesting_party_claims_endpoint = $this->getProviderConfigValue('requesting_party_claims_endpoint',true);
 		$state = $this->generateRandString();
-		$_SESSION['rpt_state'] = $state;
+		$this->setSessionKey('rpt_state', $state);
 		$requesting_party_claims_endpoint .= "?ticket=" . $permission_ticket . "&claims_redirect_uri=" . $this->getRedirectURL() . "&client_id=" . $this->clientID . "&state=" . $state;
 		$this->redirect($requesting_party_claims_endpoint);
 	}
@@ -2032,10 +2025,10 @@ class OpenIDConnectUMAClient
 	 */
 	public function rpt_request($permission_ticket) {
 		if (isset($_REQUEST["access"])) {
-			if ($_REQUEST["access"] == 'granted' && $_REQUEST["state"] == $_SESSION['rpt_state']) {
+			if ($_REQUEST["access"] == 'granted' && $_REQUEST["state"] == $this->getSessionKey('rpt_state')) {
 				// Request new RPT
 				$return = $this->rpt_request_token($permission_ticket);
-				unset($_SESSION['rpt_state']);
+				$this->unsetSessionKey('rpt_state');
 			} else {
 				$return['error'] = 'Request to resource denied due to insufficient permissions.';
 			}
@@ -2094,4 +2087,49 @@ class OpenIDConnectUMAClient
 		$token_params = http_build_query($token_params, null, '&');
 		return $this->fetchURL($revoke_request_endpoint, $token_params);
 	}
+
+    /**
+     * Use session to manage a nonce
+     */
+    protected function startSession() {
+        if (!isset($_SESSION)) {
+            @session_start();
+        }
+    }
+
+    protected function commitSession() {
+        $this->startSession();
+
+        session_commit();
+    }
+
+    protected function getSessionKey($key, $pretext = null) {
+        $this->startSession();
+
+        if ($pretext !== null) {
+            return $_SESSION[$pretext][$key];
+        } else {
+            return $_SESSION[$key];
+        }
+    }
+
+    protected function setSessionKey($key, $value, $pretext = null) {
+        $this->startSession();
+
+        if ($pretext !== null) {
+            $_SESSION[$pretext][$key] = $value;
+        } else {
+            $_SESSION[$key] = $value;
+        }
+    }
+
+    protected function unsetSessionKey($key, $pretext = null) {
+        $this->startSession();
+
+        if ($pretext !== null) {
+            unset($_SESSION[$pretext][$key]);
+        } else {
+            unset($_SESSION[$key]);
+        }
+    }
 }
