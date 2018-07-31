@@ -2091,7 +2091,7 @@ class OpenIDConnectUMAClient
     /**
      * Use session to manage a nonce
      */
-    protected function startSession() {
+    public function startSession() {
         if (!isset($_SESSION)) {
             @session_start();
         }
