@@ -1755,13 +1755,18 @@ class OpenIDConnectUMAClient
 	 *
 	 * @throws OpenIDConnectClientException
 	 */
-	public function resource_set($name, $icon, $scopes) {
+	public function resource_set($name, $icon, $scopes, $type = null) {
 		$resource_set_endpoint = $this->getProviderConfigValue('resource_registration_endpoint',true);
 		$send_object = (object)array(
 			'name' => $name,
 			'icon_uri' => $icon,
 			'resource_scopes' => $scopes
 		);
+
+		if ($type !== null) {
+            $send_object->type = $type;
+        }
+
 		$headers = array("Authorization: Bearer {$this->accessToken}");
 		$response = $this->fetchURL($resource_set_endpoint, json_encode($send_object), $headers);
 		//$json_response = json_decode($response);
@@ -1807,13 +1812,18 @@ class OpenIDConnectUMAClient
 		return $return;
 	}
 
-	public function update_resource_set($id, $name, $icon, $scopes) {
+	public function update_resource_set($id, $name, $icon, $scopes, $type = null) {
 		$resource_set_endpoint = $this->getProviderConfigValue('resource_registration_endpoint',true);
 		$send_object = (object)array(
 			'name' => $name,
 			'icon_uri' => $icon,
 			'scopes' => $scopes
 		);
+
+        if ($type !== null) {
+            $send_object->type = $type;
+        }
+
 		$headers = array("Authorization: Bearer {$this->accessToken}");
 		$response = $this->fetchURL($resource_set_endpoint . '/' . $id, json_encode($send_object), $headers, 'PUT');
 		$json_response = json_decode($response);
