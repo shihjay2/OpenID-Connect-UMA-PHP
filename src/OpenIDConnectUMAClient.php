@@ -1775,8 +1775,12 @@ class OpenIDConnectUMAClient
 			throw new OpenIDConnectClientException($json_response->{'error_description'});
 		}
 		$return['resource_set_id'] = $json_response->{'_id'};
-		$return['user_access_policy_uri'] = $json_response->{'user_access_policy_uri'};
-		return $return;
+
+        if (isset($json_response->{'user_access_policy_uri'})) {
+            $return['user_access_policy_uri'] = $json_response->{'user_access_policy_uri'};
+        }
+
+        return $return;
 	}
 
 	public function delete_resource_set($id) {
@@ -1795,7 +1799,11 @@ class OpenIDConnectUMAClient
 			throw new OpenIDConnectClientException($json_response->{'error_description'});
 		}
 		$return['resource_set_id'] = $json_response->{'_id'};
-		$return['user_access_policy_uri'] = $json_response->{'user_access_policy_uri'};
+
+		if (isset($json_response->{'user_access_policy_uri'})) {
+            $return['user_access_policy_uri'] = $json_response->{'user_access_policy_uri'};
+        }
+
 		return $return;
 	}
 
@@ -1817,8 +1825,12 @@ class OpenIDConnectUMAClient
 			throw new OpenIDConnectClientException($json_response->{'error_description'});
 		}
 		$return['resource_set_id'] = $json_response->{'_id'};
-		$return['user_access_policy_uri'] = $json_response->{'user_access_policy_uri'};
-		return $return;
+
+		if (isset($json_response->{'user_access_policy_uri'})) {
+            $return['user_access_policy_uri'] = $json_response->{'user_access_policy_uri'};
+        }
+
+        return $return;
 	}
 
 	public function get_resources($all=false) {
