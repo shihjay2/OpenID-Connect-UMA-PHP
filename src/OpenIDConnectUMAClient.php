@@ -295,7 +295,7 @@ class OpenIDConnectUMAClient
 				}
 
 				// If this is a valid claim
-				if ($this->verifyJWTclaims($claims)) {
+				if ($this->verifyJWTclaims($claims, $token_json->access_token)) {
 
 					// Clean up the session a little
 					$this->unsetNonce();
@@ -949,7 +949,7 @@ class OpenIDConnectUMAClient
 	 * @param object $claims
 	 * @return bool
 	 */
-	private function verifyJWTclaims($claims) {
+	private function verifyJWTclaims($claims, $accessToken = null) {
 		if(isset($claims->at_hash) && isset($accessToken)){
 			if(isset($this->getAccessTokenHeader()->alg) && $this->getAccessTokenHeader()->alg != 'none'){
 				$bit = substr($this->getAccessTokenHeader()->alg, 2, 3);
