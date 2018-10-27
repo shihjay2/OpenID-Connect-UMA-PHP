@@ -123,6 +123,11 @@ class OpenIDConnectUMAClient
 	private $authParams = array();
 
 	/**
+	 * @var array holds additional registration parameters for example post_logout_redirect_uris
+	 */
+	private $registrationParams = array();
+
+	/**
 	 * @var mixed holds well-known openid server properties
 	 */
 	private $wellKnown = false;
@@ -445,6 +450,13 @@ class OpenIDConnectUMAClient
 	}
 
 	/**
+	 * @param $param - example: post_logout_redirect_uris=[http://example.com/successful-logout]
+	 */
+	public function addRegistrationParam($param) {
+		$this->registrationParams = array_merge($this->registrationParams, (array)$param);
+	}
+
+	/**
 	 * @param $jwk object - example: (object) array('kid' => ..., 'nbf' => ..., 'use' => 'sig', 'kty' => "RSA", 'e' => "", 'n' => "")
 	 */
 	protected function addAdditionalJwk($jwk) {
@@ -534,11 +546,11 @@ class OpenIDConnectUMAClient
 		if (property_exists($this, 'redirectURL') && $this->redirectURL) {
 			return $this->redirectURL;
 		}
-		if(isset($this->redirectURL)){
-            if (sizeof($this->redirectURL) > 0 && $this->redirectURL) {
-                return $this->redirectURL;
-            }
-        }
+		if (isset($this->redirectURL)) {
+			if (sizeof($this->redirectURL) > 0 && $this->redirectURL) {
+				return $this->redirectURL;
+			}
+		}
 		// Other-wise return the URL of the current page
 		/**
 		 * Thank you
@@ -1085,7 +1097,7 @@ class OpenIDConnectUMAClient
 
 		// Determine whether this is a GET or POST
 		if ($post_body != null && $put_delete == null) {
-		    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
 			curl_setopt($ch, CURLOPT_POSTFIELDS, $post_body);
 
 			// Default content type is form encoded
@@ -1100,9 +1112,9 @@ class OpenIDConnectUMAClient
 			// Add POST-specific headers
 			$headers[] = "Content-Type: {$content_type}";
 			$headers[] = 'Content-Length: ' . strlen($post_body);
-		}else{
-		    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $put_delete);
-        }
+		} else {
+			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $put_delete);
+		}
 
 		// If we set some heaers include them
 		if(count($headers) > 0) {
@@ -1341,7 +1353,7 @@ class OpenIDConnectUMAClient
 		if (sizeof($this->scopes) > 0) {
 			$send_array = array_merge($send_array, array('scope' => implode(' ', $this->scopes)));
 		}
-		$send_object = (object) $send_array;
+		$send_object = (object ) array_merge($this->registrationParams, $send_array);
 		$response = $this->fetchURL($registration_endpoint, json_encode($send_object));
 		$json_response = json_decode($response);
 
@@ -1777,11 +1789,11 @@ class OpenIDConnectUMAClient
 		}
 		$return['resource_set_id'] = $json_response->{'_id'};
 
-        if (isset($json_response->{'user_access_policy_uri'})) {
-            $return['user_access_policy_uri'] = $json_response->{'user_access_policy_uri'};
-        }
+		if (isset($json_response->{'user_access_policy_uri'})) {
+			$return['user_access_policy_uri'] = $json_response->{'user_access_policy_uri'};
+		}
 
-        return $return;
+		return $return;
 	}
 
 	public function delete_resource_set($id) {
@@ -1802,8 +1814,8 @@ class OpenIDConnectUMAClient
 		$return['resource_set_id'] = $json_response->{'_id'};
 
 		if (isset($json_response->{'user_access_policy_uri'})) {
-            $return['user_access_policy_uri'] = $json_response->{'user_access_policy_uri'};
-        }
+			$return['user_access_policy_uri'] = $json_response->{'user_access_policy_uri'};
+		}
 
 		return $return;
 	}
@@ -1829,10 +1841,10 @@ class OpenIDConnectUMAClient
 		$return['resource_set_id'] = $json_response->{'_id'};
 
 		if (isset($json_response->{'user_access_policy_uri'})) {
-            $return['user_access_policy_uri'] = $json_response->{'user_access_policy_uri'};
-        }
+			$return['user_access_policy_uri'] = $json_response->{'user_access_policy_uri'};
+		}
 
-        return $return;
+		return $return;
 	}
 
 	public function get_resources($all=false) {
@@ -2044,56 +2056,56 @@ class OpenIDConnectUMAClient
 		return $this->fetchURL($revoke_request_endpoint, $token_params);
 	}
 
-    /**
-     * Use session to manage a nonce
-     */
-    public function startSession() {
-        if (!isset($_SESSION)) {
-            @session_start();
-        }
-    }
+	/**
+	 * Use session to manage a nonce
+	 */
+	public function startSession() {
+		if (!isset($_SESSION)) {
+			@session_start();
+		}
+	}
 
-    protected function commitSession() {
-        $this->startSession();
+	protected function commitSession() {
+		$this->startSession();
 
-        session_commit();
-    }
+		session_commit();
+	}
 
-    protected function getSessionKey($key, $pretext = null) {
-        $this->startSession();
+	protected function getSessionKey($key, $pretext = null) {
+		$this->startSession();
 
-        if ($pretext !== null) {
+		if ($pretext !== null) {
 			if (isset($_SESSION[$pretext][$key])) {
-            	return $_SESSION[$pretext][$key];
+				return $_SESSION[$pretext][$key];
 			} else {
 				return null;
 			}
-        } else {
+		} else {
 			if (isset($_SESSION[$key])) {
-            	return $_SESSION[$key];
+				return $_SESSION[$key];
 			} else {
 				return null;
 			}
-        }
-    }
+		}
+	}
 
-    protected function setSessionKey($key, $value, $pretext = null) {
-        $this->startSession();
+	protected function setSessionKey($key, $value, $pretext = null) {
+		$this->startSession();
 
-        if ($pretext !== null) {
-            $_SESSION[$pretext][$key] = $value;
-        } else {
-            $_SESSION[$key] = $value;
-        }
-    }
+		if ($pretext !== null) {
+			$_SESSION[$pretext][$key] = $value;
+		} else {
+			$_SESSION[$key] = $value;
+		}
+	}
 
-    protected function unsetSessionKey($key, $pretext = null) {
-        $this->startSession();
+	protected function unsetSessionKey($key, $pretext = null) {
+		$this->startSession();
 
-        if ($pretext !== null) {
-            unset($_SESSION[$pretext][$key]);
-        } else {
-            unset($_SESSION[$key]);
-        }
-    }
+		if ($pretext !== null) {
+			unset($_SESSION[$pretext][$key]);
+		} else {
+			unset($_SESSION[$key]);
+		}
+	}
 }
