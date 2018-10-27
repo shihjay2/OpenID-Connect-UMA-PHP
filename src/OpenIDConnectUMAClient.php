@@ -534,9 +534,11 @@ class OpenIDConnectUMAClient
 		if (property_exists($this, 'redirectURL') && $this->redirectURL) {
 			return $this->redirectURL;
 		}
-		if (sizeof($this->redirectURL) > 0 && $this->redirectURL) {
-			return $this->redirectURL;
-		}
+		if(isset($this->redirectURL)){
+            if (sizeof($this->redirectURL) > 0 && $this->redirectURL) {
+                return $this->redirectURL;
+            }
+        }
 		// Other-wise return the URL of the current page
 		/**
 		 * Thank you
@@ -1082,12 +1084,8 @@ class OpenIDConnectUMAClient
 		$ch = curl_init();
 
 		// Determine whether this is a GET or POST
-		if ($post_body != null) {
-			if ($put_delete != null) {
-				curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $put_delete);
-			} else {
-				curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
-			}
+		if ($post_body != null && $put_delete == null) {
+		    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
 			curl_setopt($ch, CURLOPT_POSTFIELDS, $post_body);
 
 			// Default content type is form encoded
@@ -1102,7 +1100,9 @@ class OpenIDConnectUMAClient
 			// Add POST-specific headers
 			$headers[] = "Content-Type: {$content_type}";
 			$headers[] = 'Content-Length: ' . strlen($post_body);
-		}
+		}else{
+		    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $put_delete);
+        }
 
 		// If we set some heaers include them
 		if(count($headers) > 0) {
