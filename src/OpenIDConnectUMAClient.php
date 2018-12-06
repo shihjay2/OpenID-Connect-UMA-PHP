@@ -781,7 +781,7 @@ class OpenIDConnectUMAClient
 	 */
 	private function requestTokens($code, $uma = false) {
 		$token_endpoint = $this->getProviderConfigValue("token_endpoint", $uma);
-		// $token_endpoint_auth_methods_supported = $this->getProviderConfigValue("token_endpoint_auth_methods_supported", false, ['client_secret_basic']);
+		$token_endpoint_auth_methods_supported = $this->getProviderConfigValue("token_endpoint_auth_methods_supported", false, ['client_secret_basic']);
 
 		$headers = [];
 
@@ -796,10 +796,10 @@ class OpenIDConnectUMAClient
 		);
 
 		// Consider Basic authentication if provider config is set this way
-		// if (in_array('client_secret_basic', $token_endpoint_auth_methods_supported)) {
-		// 	$headers = ['Authorization: Basic ' . base64_encode($this->clientID . ':' . $this->clientSecret)];
-		// 	unset($token_params['client_secret']);
-		// }
+		if (in_array('client_secret_basic', $token_endpoint_auth_methods_supported)) {
+			$headers = ['Authorization: Basic ' . base64_encode($this->clientID . ':' . $this->clientSecret)];
+			unset($token_params['client_secret']);
+		}
 
 		// Convert token params to string format
 		$token_params = http_build_query($token_params, null, '&');
@@ -816,6 +816,9 @@ class OpenIDConnectUMAClient
 	public function refreshToken($refresh_token) {
 		$uma = $this->getUMA();
 		$token_endpoint = $this->getProviderConfigValue("token_endpoint", $uma);
+		$token_endpoint_auth_methods_supported = $this->getProviderConfigValue("token_endpoint_auth_methods_supported", false, ['client_secret_basic']);
+
+		$headers = [];
 
 		$grant_type = "refresh_token";
 
@@ -826,10 +829,16 @@ class OpenIDConnectUMAClient
 			'client_secret' => $this->clientSecret,
 		);
 
+		// Consider Basic authentication if provider config is set this way
+		if (in_array('client_secret_basic', $token_endpoint_auth_methods_supported)) {
+			$headers = ['Authorization: Basic ' . base64_encode($this->clientID . ':' . $this->clientSecret)];
+			unset($token_params['client_secret']);
+		}
+
 		// Convert token params to string format
 		$token_params = http_build_query($token_params, null, '&');
 
-		$json = json_decode($this->fetchURL($token_endpoint, $token_params));
+		$json = json_decode($this->fetchURL($token_endpoint, $token_params, $headers));
 		$this->accessToken = $json->access_token;
 
 		if (isset($json->refresh_token)) {
@@ -931,15 +940,30 @@ class OpenIDConnectUMAClient
 	 * @return bool
 	 */
 	public function verifyJWTsignature($jwt, $uma) {
+		if (!\is_string($jwt)) {
+            throw new OpenIDConnectClientException('Error token is not a string');
+        }
 		$parts = explode(".", $jwt);
+		if (!isset($parts[0])) {
+            throw new OpenIDConnectClientException('Error missing part 0 in token');
+        }
 		$signature = base64url_decode(array_pop($parts));
+		if (false === $signature || '' === $signature) {
+		   throw new OpenIDConnectClientException('Error decoding signature from token');
+	   }
 		$header = json_decode(base64url_decode($parts[0]));
+		if (null === $header || !\is_object($header)) {
+            throw new OpenIDConnectClientException('Error decoding JSON from token header');
+        }
 		$payload = implode(".", $parts);
 		$jwks = json_decode($this->fetchURL($this->getProviderConfigValue('jwks_uri',$uma)));
 		if ($jwks === NULL) {
 			throw new OpenIDConnectClientException('Error decoding JSON from jwks_uri');
 		}
 		$verified = false;
+		if (!isset($header->alg)) {
+            throw new OpenIDConnectClientException('Error missing signature type in token header');
+        }
 		switch ($header->alg) {
 		case 'RS256':
 		case 'RS384':
