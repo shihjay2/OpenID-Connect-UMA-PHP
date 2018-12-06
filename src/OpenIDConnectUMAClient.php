@@ -840,6 +840,7 @@ class OpenIDConnectUMAClient
 
 		$json = json_decode($this->fetchURL($token_endpoint, $token_params, $headers));
 		$this->accessToken = $json->access_token;
+		$this->tokenResponse = $json;
 
 		if (isset($json->refresh_token)) {
 			$this->refreshToken = $json->refresh_token;
